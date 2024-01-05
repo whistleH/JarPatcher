@@ -2,13 +2,17 @@ import os
 import zipfile
 import shutil
 from config import *
+import sys
+
 def doDecompile(javaPath, jarPath):
     print(os.popen(
-        f"{javaPath} -cp java-decompiler.jar org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler {jarPath} ./target").read())
+        f"{javaPath} -cp java-decompiler.jar org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler -dgs=true ./src/{jarPath} ./target/").read())
     print("反编译完成")
+
 def doUnzip(jarName):
     zipfile.ZipFile(f"./target/{jarName}").extractall(f"./target/{jarName[:-4]}")
     print("jar包解压完成")
+
 def makeIdeaProject(jarName):
     try:
         shutil.copytree(f"./target/{jarName[0:-4]}/BOOT-INF/classes", f"./project/{jarName[:-4]}/src/main/java")
@@ -36,9 +40,29 @@ def makeIdeaProject(jarName):
     shutil.copytree(f"./target/{jarName[0:-4]}/META-INF", f"./project/{jarName[:-4]}/META-INF")
 
     print("idea项目创建完成")
+
+def cleanDir(directory:str):
+    try:
+        # 获取目录中的所有文件
+        file_list = os.listdir(directory)
+        for file_name in file_list:
+            file_path = os.path.join(directory, file_name)
+            if os.path.isfile(file_path):  # 只删除文件，而不是目录
+                print(f"删除文件: {file_path}")
+                os.remove(file_path)  # 删除文件
+        print("目录下的所有文件已删除")
+    except OSError as e:
+        print(f"删除文件时出错：{e}")
+
+
 def parseCommand():
     pass
+
 if __name__=="__main__":
+    # clean target and project
+    cleanDir('./target')
+    cleanDir('./project')
+
     doDecompile(javaPath, jarPath)
     doUnzip(os.path.basename(jarPath))
     makeIdeaProject(os.path.basename(jarPath))
